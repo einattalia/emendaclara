@@ -1,37 +1,27 @@
-# Banco inicial do Emenda Clara
+# Configuração Supabase — Emenda Clara
 
-Pacote inicial de esquema PostgreSQL para cadastrar as emendas dos 21 gabinetes da Câmara.
+Pacote SQL preparado para o projeto informado pela Câmara: `jetwbolmydxgvbpwapqd`.
 
-## O que cria
+## O que este pacote prepara
 
-- Estrutura `emenda_clara` com usuários, perfis, vereadores, gabinetes e secretarias
-- Relação de usuários com um ou mais gabinetes e secretarias
-- Emendas com valor solicitado, exercício, objeto, secretaria, status e responsáveis
-- Documentos por referência de armazenamento e histórico de alterações
-- Área separada para lotes e movimentações financeiras futuras
-- Políticas de segurança por linha (RLS) para separar os gabinetes e limitar acessos por perfil
-- Carga inicial de 21 gabinetes com rótulos `Gabinete 01` a `Gabinete 21`
+- Schema privado `emenda_clara` para usuários, perfis, 21 gabinetes, vereadores, secretarias, emendas e registros financeiros
+- Políticas RLS compatíveis com a identidade de Supabase Auth (`auth.uid()`)
+- Acesso limitado por gabinete e por perfil
+- Um script para atribuir perfil de administrador ao usuário já criado no Supabase Auth
 
-Os rótulos são provisórios. Não há nomes de vereadores, contas de acesso nem nomes de secretarias preenchidos, pois esses cadastros precisam ser confirmados pela Câmara e pela Prefeitura.
+## Aplicação no painel
 
-## Como aplicar
+1. Confirme no painel que o projeto selecionado é `jetwbolmydxgvbpwapqd` e que o schema `emenda_clara` ainda não existe. O script principal aborta se encontrar esse schema, para evitar alterar uma estrutura preexistente.
+2. No SQL Editor, execute `001_schema_supabase.sql`.
+3. Execute `002_seed_21_gabinetes.sql` para criar os gabinetes `GAB-01` a `GAB-21`.
+4. Em **Authentication → Users**, crie ou convide `teste.camaramunicipal@gmail.com`. Não coloque senha em arquivo ou no chat. O envio do convite pode exigir SMTP próprio; o SMTP padrão do Supabase só envia para endereços autorizados da equipe do projeto.
+5. Depois que o usuário aparecer em Authentication → Users, execute `003_admin_inicial.sql`. Ele vincula o `auth.uid()` do e-mail acima e concede o perfil `administrador`.
+6. Se o aplicativo for consultar as tabelas pela Data API, adicione `emenda_clara` à lista de schemas expostos nas configurações da API. O script concede acesso apenas ao papel `authenticated` e mantém RLS habilitado.
 
-1. Crie um banco PostgreSQL exclusivo para o sistema, por exemplo `emenda_clara`.
-2. Execute `001_schema.sql` nesse banco.
-3. Execute `002_seed_21_gabinetes.sql`.
-4. Cadastre os usuários pelo provedor de autenticação escolhido e relacione cada conta a um ou mais gabinetes em `gabinete_usuarios`.
-5. Depois de confirmar a estrutura administrativa, cadastre as secretarias em `secretarias` e os vínculos em `secretaria_usuarios`.
+Os scripts não contêm senha, chave secreta ou `service_role`. `001_schema_supabase.sql` e `003_admin_inicial.sql` devem ser executados como administrador do banco pelo SQL Editor. O usuário deve ser criado primeiro em Supabase Auth para que a atribuição de perfil funcione.
 
-O esquema usa `bigint` para identificadores, `numeric(14,2)` para valores, `timestamptz` para datas com horário e índices nas chaves estrangeiras usadas em consultas.
+## Limites atuais
 
-## Acesso e segurança
+Não consegui aplicar ou inspecionar o projeto diretamente: a conexão Supabase disponível nesta sessão não tem permissão nele. Portanto, estes scripts ainda não foram executados nem verificados contra o banco remoto. O protótipo HTML existente continua demonstrativo e ainda não está conectado à autenticação ou às tabelas; esta etapa prepara o banco e o vínculo do primeiro administrador.
 
-As políticas RLS leem o usuário autenticado do contexto PostgreSQL `emenda_clara.usuario_id`. O backend deve autenticar a pessoa, abrir uma transação e definir esse contexto para cada requisição, por exemplo com `set_config('emenda_clara.usuario_id', '<id interno>', true)`. Use uma conexão de aplicação sem privilégios de proprietário ou `BYPASSRLS`; nunca conecte o navegador diretamente ao banco. O provedor de autenticação ainda precisa ser escolhido e integrado.
-
-A tabela `emenda_historico` foi desenhada para receber eventos append-only. A aplicação e os privilégios do banco devem impedir edição e exclusão do histórico por usuários comuns. Documentos ficam em armazenamento de arquivos; o banco guarda a chave e os metadados, não o conteúdo do arquivo.
-
-A publicação pública deve usar uma consulta ou visão explícita com campos aprovados. Este pacote não concede acesso anônimo nem cria uma conexão com a contabilidade municipal.
-
-## Limites desta entrega
-
-O pacote contém os scripts de estrutura e carga inicial; ele não instala nem inicia um servidor PostgreSQL e não cria contas de usuários. A integração financeira está modelada para uma etapa posterior, após confirmação de formato, origem e validação pela Fazenda e TI. O script ainda precisa ser aplicado e revisado em uma instância PostgreSQL de desenvolvimento antes de qualquer uso real.
+Antes de aplicar, confira se o projeto correto está aberto e se o schema `emenda_clara` está livre. Se o schema já existir, pare e revise a estrutura antes de prosseguir. Use dados fictícios em desenvolvimento e faça backup antes de qualquer implantação operacional.
