@@ -1,27 +1,22 @@
 # Configuração Supabase — Emenda Clara
 
-Pacote SQL preparado para o projeto informado pela Câmara: `jetwbolmydxgvbpwapqd`.
+Projeto: `jetwbolmydxgvbpwapqd`.
 
-## O que este pacote prepara
+## Estado atual do projeto
 
-- Schema privado `emenda_clara` para usuários, perfis, 21 gabinetes, vereadores, secretarias, emendas e registros financeiros
-- Políticas RLS compatíveis com a identidade de Supabase Auth (`auth.uid()`)
-- Acesso limitado por gabinete e por perfil
-- Um script para atribuir perfil de administrador ao usuário já criado no Supabase Auth
+- O schema `emenda_clara` e suas tabelas já existem.
+- Os 21 gabinetes estão cadastrados (`GAB-01` a `GAB-21`).
+- A migração `supabase_auth_identity_and_grants` foi aplicada para reconhecer `auth.uid()` e conceder os privilégios necessários, sempre com RLS.
+- Ainda não há usuário em Supabase Auth nem perfil de administrador.
 
-## Aplicação no painel
+## Criar o administrador inicial
 
-1. Confirme no painel que o projeto selecionado é `jetwbolmydxgvbpwapqd` e que o schema `emenda_clara` ainda não existe. O script principal aborta se encontrar esse schema, para evitar alterar uma estrutura preexistente.
-2. No SQL Editor, execute `001_schema_supabase.sql`.
-3. Execute `002_seed_21_gabinetes.sql` para criar os gabinetes `GAB-01` a `GAB-21`.
-4. Em **Authentication → Users**, crie ou convide `teste.camaramunicipal@gmail.com`. Não coloque senha em arquivo ou no chat. O envio do convite pode exigir SMTP próprio; o SMTP padrão do Supabase só envia para endereços autorizados da equipe do projeto.
-5. Depois que o usuário aparecer em Authentication → Users, execute `003_admin_inicial.sql`. Ele vincula o `auth.uid()` do e-mail acima e concede o perfil `administrador`.
-6. Se o aplicativo for consultar as tabelas pela Data API, adicione `emenda_clara` à lista de schemas expostos nas configurações da API. O script concede acesso apenas ao papel `authenticated` e mantém RLS habilitado.
+1. No painel deste projeto, abra **Authentication → Users**.
+2. Crie ou convide `teste.camaramunicipal@gmail.com`. A conta precisa aparecer na lista de usuários do Auth. O envio de convite pode exigir SMTP próprio; o SMTP padrão do Supabase limita os destinatários autorizados.
+3. Depois que o usuário existir, execute `003_admin_inicial.sql` no SQL Editor, ou peça ao assistente para aplicar o perfil. Esse script associa a conta Auth ao cadastro Emenda Clara e concede `administrador`; ele não cria nem armazena senha.
 
-Os scripts não contêm senha, chave secreta ou `service_role`. `001_schema_supabase.sql` e `003_admin_inicial.sql` devem ser executados como administrador do banco pelo SQL Editor. O usuário deve ser criado primeiro em Supabase Auth para que a atribuição de perfil funcione.
+**Não execute `001_schema_supabase.sql` nem `002_seed_21_gabinetes.sql` novamente neste projeto.** O schema e os gabinetes já existem. O arquivo principal aborta se detectar o schema, para evitar alterações sobre uma estrutura existente. Os arquivos 001 e 002 servem apenas para uma instalação nova.
 
 ## Limites atuais
 
-Não consegui aplicar ou inspecionar o projeto diretamente: a conexão Supabase disponível nesta sessão não tem permissão nele. Portanto, estes scripts ainda não foram executados nem verificados contra o banco remoto. O protótipo HTML existente continua demonstrativo e ainda não está conectado à autenticação ou às tabelas; esta etapa prepara o banco e o vínculo do primeiro administrador.
-
-Antes de aplicar, confira se o projeto correto está aberto e se o schema `emenda_clara` está livre. Se o schema já existir, pare e revise a estrutura antes de prosseguir. Use dados fictícios em desenvolvimento e faça backup antes de qualquer implantação operacional.
+O banco e as permissões foram preparados, mas o protótipo HTML ainda não está conectado à autenticação ou às tabelas. Depois de criar o primeiro usuário, ainda será necessário integrar o aplicativo para oferecer login e carregar os dados reais. A lista de secretarias e os dados financeiros também precisam ser confirmados com a Câmara e a Prefeitura antes de uso operacional.
